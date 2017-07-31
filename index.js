@@ -15,6 +15,18 @@ module.exports = function(corsica) {
   var req = corsica.request;
   var youtube_re = RegExp('screenshots.firefox.com/.*');
 
+  function og(url, cb) {
+    req(url, function (error, res, body) {
+      var $ = cheerio.load(body);
+      let og = $('meta[property^="og:"]');
+      og = Array.from(og).reduce((obj, el) => {
+        obj[el.attribs.property.replace('og:', '')] = el.attribs.content;
+        return obj;
+      }, {});
+      cb(og);
+    });
+  }
+
   corsica.on('content', function(msg) {
     if (!('url' in msg)) {
       return msg;
@@ -106,16 +118,3 @@ module.exports = function(corsica) {
     return msg;
   });
 };
-
-
-function og(url, cb) {
-  req(url, function (error, res, body) {
-    var $ = cheerio.load(body);
-    let og = $('meta[property^="og:"]');
-    og = Array.from(og).reduce((obj, el) => {
-      obj[el.attribs.property.replace('og:', '')] = el.attribs.content;
-      return obj;
-    }, {});
-    cb(og);
-  });
-}
